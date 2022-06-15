@@ -1,0 +1,177 @@
+from util import manhattanDistance
+from game import Directions
+import random, util
+
+from game import Agent
+
+## Example Agent
+class ReflexAgent(Agent):
+
+  def Action(self, gameState):
+
+    move_candidate = gameState.getLegalActions()
+
+    scores = [self.reflex_agent_evaluationFunc(gameState, action) for action in move_candidate]
+    bestScore = max(scores)
+    Index = [index for index in range(len(scores)) if scores[index] == bestScore]
+    get_index = random.choice(Index)
+
+    return move_candidate[get_index]
+
+  def reflex_agent_evaluationFunc(self, currentGameState, action):
+
+    successorGameState = currentGameState.generatePacmanSuccessor(action)
+    newPos = successorGameState.getPacmanPosition()
+    oldFood = currentGameState.getFood()
+    newGhostStates = successorGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+
+    return successorGameState.getScore()
+
+
+
+def scoreEvalFunc(currentGameState):
+
+  return currentGameState.getScore()
+
+class AdversialSearchAgent(Agent):
+
+  def __init__(self, getFunc ='scoreEvalFunc', depth ='2'):
+    self.index = 0
+    self.evaluationFunction = util.lookup(getFunc, globals())
+
+    self.depth = int(depth)
+
+######################################################################################
+
+class MinimaxAgent(AdversialSearchAgent):
+  """
+    [문제 01] MiniMax의 Action을 구현하시오. (20점)
+    (depth와 evaluation function은 위에서 정의한 self.depth and self.evaluationFunction을 사용할 것.)
+  """
+  def Action(self, gameState):
+    maximum = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = self.Min_Value(gameState.generateSuccessor(0, action), 1 , 0)
+      if(maximum<v):
+        maximum = v
+        result_move = action
+    #print(maximum)
+    #print(result_move)
+    return result_move
+
+
+  def Max_Value(self, gameState,index,depth):
+    #if len(gameState.getLegalActions(index))==0: 
+    if gameState.isLose() or gameState.isWin() or depth == self.depth:
+      return self.evaluationFunction(gameState)
+    v = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = max(v,self.Min_Value(gameState.generateSuccessor(0,action),1,depth))
+    return v
+
+  def Min_Value(self, gameState, index, depth):
+    #if len(gameState.getLegalActions(index))==0:
+    if gameState.isLose() or gameState.isWin():
+      return self.evaluationFunction(gameState)
+    v = float("inf")
+    for action in gameState.getLegalActions(index):
+      if index+1<gameState.getNumAgents():
+        v = min(v,self.Min_Value(gameState.generateSuccessor(index,action),index+1,depth))
+      else:
+        v = min(v,self.Max_Value(gameState.generateSuccessor(index,action),0,depth+1))
+    return v
+    
+  #코드 좀 바꾸기 ㅎㅎ
+
+
+class AlphaBetaAgent(AdversialSearchAgent):
+  """
+    [문제 02] AlphaBeta의 Action을 구현하시오. (25점)
+    (depth와 evaluation function은 위에서 정의한 self.depth and self.evaluationFunction을 사용할 것.)
+  """
+  def Action(self, gameState):
+    ####################### Write Your Code Here ################################
+    alpha = -float("inf")
+    beta = float("inf")  
+    maximum = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = self.AB_Min_Value(gameState.generateSuccessor(0, action), 1 , 0,alpha,beta)
+      if(maximum<v):
+        maximum = v
+        result_move = action
+        alpha = max(alpha,maximum)
+    #print(maximum)
+    #print(result_move)
+    return result_move
+    ############################################################################
+  def AB_Max_Value(self,gameState, index,depth,alpha,beta):
+    if gameState.isLose() or gameState.isWin() or depth == self.depth:
+      return self.evaluationFunction(gameState)
+    ##return self.evaluationFunction(gameState)
+    v = -float("inf")
+    for action in gameState.getLegalActions(index):
+      vv = self.AB_Min_Value(gameState.generateSuccessor(index,action),1,depth,alpha,beta)
+      if(vv>v):
+        v=vv
+      if(v>beta):
+        return v
+      
+      alpha = max(alpha,v)
+    return v
+  def AB_Min_Value(self,gameState,index,depth,alpha,beta):
+    if gameState.isLose() or gameState.isWin():
+      return self.evaluationFunction(gameState)
+    v = float("inf")
+    for action in gameState.getLegalActions(index):
+      if index+1<gameState.getNumAgents():
+        vv = self.AB_Min_Value(gameState.generateSuccessor(index,action),index+1,depth,alpha,beta)
+      else:
+        vv = self.AB_Max_Value(gameState.generateSuccessor(index,action),0,depth+1,alpha,beta)
+      if(vv<v):
+        v=vv
+      if(v<alpha):
+        return v
+      beta = min(beta,v)
+    return v
+
+
+class ExpectimaxAgent(AdversialSearchAgent):
+  """
+    [문제 03] Expectimax의 Action을 구현하시오. (25점)
+    (depth와 evaluation function은 위에서 정의한 self.depth and self.evaluationFunction을 사용할 것.)
+  """
+  def Action(self, gameState):
+    ####################### Write Your Code Here ################################
+    maximum = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = self.EX_Chance_Value(gameState.generateSuccessor(0, action), 1 , 0)
+      if(maximum<v):
+        maximum = v
+        result_move = action
+    #print(maximum)
+    return result_move
+  
+  def EX_Max_Value(self, gameState,index,depth):
+    #if len(gameState.getLegalActions(index))==0: 
+    if gameState.isLose() or gameState.isWin() or depth == self.depth:
+      return self.evaluationFunction(gameState)
+    v = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = max(v,self.EX_Chance_Value(gameState.generateSuccessor(0,action),1,depth))
+    return v
+
+  def EX_Chance_Value(self, gameState, index, depth):
+    #if len(gameState.getLegalActions(index))==0:
+    if gameState.isLose() or gameState.isWin():
+      return self.evaluationFunction(gameState)
+    v = 0
+    length = len(gameState.getLegalActions(index))
+    for action in gameState.getLegalActions(index):
+      if index+1<gameState.getNumAgents():
+        v += self.EX_Chance_Value(gameState.generateSuccessor(index,action),index+1,depth)
+      else:
+        v += self.EX_Max_Value(gameState.generateSuccessor(index,action),0,depth+1)
+    result = v/length
+    
+    return result

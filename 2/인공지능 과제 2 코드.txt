@@ -1,0 +1,115 @@
+def Action(self, gameState):
+    maximum = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = self.Min_Value(gameState.generateSuccessor(0, action), 1 , 0)
+      if(maximum<v):
+        maximum = v
+        result_move = action
+    #print(maximum)
+    #print(result_move)
+    return result_move
+    
+  def Max_Value(self, gameState,index,depth):
+    if gameState.isLose() or gameState.isWin() or depth == self.depth:
+      return self.evaluationFunction(gameState)
+    v = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = max(v,self.Min_Value(gameState.generateSuccessor(0,action),1,depth))
+    return v
+
+  def Min_Value(self, gameState, index, depth):
+    #if len(gameState.getLegalActions(index))==0:
+    if gameState.isLose() or gameState.isWin():
+      return self.evaluationFunction(gameState)
+    v = float("inf")
+    for action in gameState.getLegalActions(index):
+      if index+1<gameState.getNumAgents():
+        v = min(v,self.Min_Value(gameState.generateSuccessor(index,action),index+1,depth))
+      else:
+        v = min(v,self.Max_Value(gameState.generateSuccessor(index,action),0,depth+1))
+    return v
+
+
+
+def Action(self, gameState):
+    ####################### Write Your Code Here ################################
+    alpha = -float("inf")
+    beta = float("inf")  
+    maximum = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = self.AB_Min_Value(gameState.generateSuccessor(0, action), 1 , 0,alpha,beta)
+      if(maximum<v):
+        maximum = v
+        result_move = action
+        #alpha = max(alpha,maximum)
+        alpha = v
+    #print(maximum)
+    #print(result_move)
+    return result_move
+    ############################################################################"""
+  def AB_Max_Value(self,gameState, index,depth,alpha,beta):
+    if gameState.isLose() or gameState.isWin() or depth == self.depth:
+      return self.evaluationFunction(gameState)
+    ##return self.evaluationFunction(gameState)
+    if (len(gameState.getLegalActions(0)) == 0):
+            	return self.evaluationFunction(gameState)
+    v = -float("inf")
+    for action in gameState.getLegalActions(index):
+      vv = self.AB_Min_Value(gameState.generateSuccessor(index,action),1,depth,alpha,beta)
+      if(vv>v):
+        v=vv
+      if(v>beta):
+        return v
+      alpha = max(alpha,v)
+    return v
+  def AB_Min_Value(self,gameState,index,depth,alpha,beta):
+    if gameState.isLose() or gameState.isWin():
+      return self.evaluationFunction(gameState)
+    v = float("inf")
+    for action in gameState.getLegalActions(index):
+      if index+1<gameState.getNumAgents():
+        vv = self.AB_Min_Value(gameState.generateSuccessor(index,action),index+1,depth,alpha,beta)
+      else:
+        vv = self.AB_Max_Value(gameState.generateSuccessor(index,action),0,depth+1,alpha,beta)
+      if(vv<v):
+        v=vv
+      if(v<alpha):
+        return v
+      beta = min(beta,v)
+    return v 
+
+
+def Action(self, gameState):
+    ####################### Write Your Code Here ################################
+    maximum = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = self.EX_Chance_Value(gameState.generateSuccessor(0, action), 1 , 0)
+      if(maximum<v):
+        maximum = v
+        result_move = action
+    #print(maximum)
+    return result_move
+  
+  def EX_Max_Value(self, gameState,index,depth):
+    #if len(gameState.getLegalActions(index))==0: 
+    if gameState.isLose() or gameState.isWin() or depth == self.depth:
+      return self.evaluationFunction(gameState)
+    v = -float("inf")
+    for action in gameState.getLegalActions(0):
+      v = max(v,self.EX_Chance_Value(gameState.generateSuccessor(0,action),1,depth))
+    return v
+
+  def EX_Chance_Value(self, gameState, index, depth):
+    #if len(gameState.getLegalActions(index))==0:
+    if gameState.isLose() or gameState.isWin():
+      return self.evaluationFunction(gameState)
+    v = 0
+    length = len(gameState.getLegalActions(index))
+    for action in gameState.getLegalActions(index):
+      if index+1<gameState.getNumAgents():
+        v += self.EX_Chance_Value(gameState.generateSuccessor(index,action),index+1,depth)
+      else:
+        v += self.EX_Max_Value(gameState.generateSuccessor(index,action),0,depth+1)
+    result = v/length
+    
+    return result
